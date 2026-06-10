@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.6.0
+
+[compare changes](https://github.com/schoero/eslint-plugin-better-tailwindcss/compare/v4.5.0...v4.6.0)
+
+### Features
+
+- **enforce-logical-properties:** Add ignore option ([#383](https://github.com/schoero/eslint-plugin-better-tailwindcss/pull/383))
+
+### Fixes
+
+- **enforce-canonical-classes:** Self referencing autofixes ([#382](https://github.com/schoero/eslint-plugin-better-tailwindcss/pull/382))
+- **enforce-consistent-class-order:** Strict sorting order ([#381](https://github.com/schoero/eslint-plugin-better-tailwindcss/pull/381))
+
 ## v4.5.0
 
 [compare changes](https://github.com/schoero/eslint-plugin-better-tailwindcss/compare/v4.4.1...v4.5.0)
