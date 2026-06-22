@@ -136,7 +136,7 @@ function getLiteralsByJSXTemplateLiteral(ctx: Rule.RuleContext, node: ESTemplate
   });
 }
 
-function getMultilineQuotes(node: ESBaseNode & Rule.NodeParentExtension): MultilineMeta {
+function getMultilineQuotes(node: { parent: { type: string; }; }): MultilineMeta {
   const surroundingBraces = JSX_CONTAINER_TYPES_TO_INSERT_BRACES.includes(node.parent.type);
   const multilineQuotes: LiteralValueQuotes[] = JSX_CONTAINER_TYPES_TO_REPLACE_QUOTES.includes(node.parent.type)
     ? ["`"]

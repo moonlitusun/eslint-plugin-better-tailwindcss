@@ -2,8 +2,23 @@ import config from "@schoero/configs/eslint";
 import { defineConfig } from "eslint/config";
 
 
+const sharedConfig = config.map(entry => {
+  if(!entry.rules || !("eslint-plugin-unicorn/prefer-export-from" in entry.rules)){
+    return entry;
+  }
+
+  return {
+    ...entry,
+    rules: {
+      ...entry.rules,
+      "eslint-plugin-unicorn/prefer-export-from": ["warn", { checkUsedVariables: true }]
+    }
+  };
+});
+
+
 export default defineConfig([
-  ...config,
+  ...sharedConfig,
   {
     files: ["**/*.test.{js,jsx,cjs,mjs,ts,tsx}", "**/*.test-d.{ts,tsx}"],
     rules: {
@@ -16,22 +31,7 @@ export default defineConfig([
   {
     files: ["**/*.test.ts"],
     rules: {
-      "eslint-plugin-perfectionist/sort-objects": [
-        "warn",
-        {
-          customGroups: [
-            {
-              elementNamePattern: "^(astro|angular|jsx|svelte|vue|html)(Output)?$",
-              groupName: "markup",
-              selector: "property"
-            }
-          ],
-          groups: ["markup", { newlinesBetween: "always" }, "unknown"],
-          ignoreCase: true,
-          partitionByComment: false,
-          type: "alphabetical"
-        }
-      ],
+      "eslint-plugin-perfectionist/sort-objects": "off",
       "eslint-plugin-typescript/naming-convention": "off",
       "eslint-plugin-typescript/no-floating-promises": "off"
 

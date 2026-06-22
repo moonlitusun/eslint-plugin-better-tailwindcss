@@ -1,9 +1,6 @@
-import type { Rule } from "eslint";
+import type { Node as ESNode } from "estree";
 
 
-type Nullable<Object extends object> = {
-  [Key in keyof Object]: Object[Key] | null;
+export type WithParent<BaseNode> = BaseNode & {
+  parent?: ESNode | null;
 };
-
-
-export type WithParent<BaseNode> = BaseNode & Nullable<Partial<Rule.NodeParentExtension>>;

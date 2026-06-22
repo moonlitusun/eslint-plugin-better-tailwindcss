@@ -15,7 +15,6 @@ import {
   getIndentation,
   getQuotes,
   getWhitespace,
-  isGenericNodeWithParent,
   matchesName
 } from "better-tailwindcss:utils/utils.js";
 
@@ -32,6 +31,7 @@ import type {
   MemberExpression as ESMemberExpression,
   Node as ESNode,
   SimpleLiteral as ESSimpleLiteral,
+  SourceLocation,
   SpreadElement as ESSpreadElement,
   TaggedTemplateExpression as ESTaggedTemplateExpression,
   TemplateElement as ESTemplateElement,
@@ -57,7 +57,11 @@ import type {
   TagSelector,
   VariableSelector
 } from "better-tailwindcss:types/rule.js";
-import type { GenericNodeWithParent } from "better-tailwindcss:utils/utils.js";
+
+
+type ESNodeWithParent = ESNode & {
+  parent: ESNode;
+};
 
 
 export const ES_CONTAINER_TYPES_TO_REPLACE_QUOTES: string[] = [
@@ -287,7 +291,7 @@ export function getStringLiteralByESStringLiteral(ctx: Rule.RuleContext, node: E
 
 }
 
-function getLiteralByESTemplateElement(ctx: Rule.RuleContext, node: ESTemplateElement & Rule.Node): TemplateLiteral | undefined {
+function getLiteralByESTemplateElement(ctx: Rule.RuleContext, node: ESTemplateElement & ESNodeWithParent): TemplateLiteral | undefined {
 
   const raw = ctx.sourceCode.getText(node);
 
@@ -326,7 +330,7 @@ function getLiteralByESTemplateElement(ctx: Rule.RuleContext, node: ESTemplateEl
 
 }
 
-function getMultilineQuotes(node: ESNode & Rule.NodeParentExtension): MultilineMeta {
+function getMultilineQuotes(node: ESNodeWithParent): MultilineMeta {
   const surroundingBraces = ES_CONTAINER_TYPES_TO_INSERT_BRACES.includes(node.parent.type);
   const multilineQuotes: LiteralValueQuotes[] = ES_CONTAINER_TYPES_TO_REPLACE_QUOTES.includes(node.parent.type)
     ? ["`"]
@@ -393,7 +397,7 @@ function findPriorLiterals(ctx: Rule.RuleContext, node: ESNode) {
       }
     }
 
-    if(parent.type === "TemplateElement"){
+    if(parent.type === "TemplateElement" && hasESNodeParentExtension(parent)){
       const literal = getLiteralByESTemplateElement(ctx, parent);
 
       if(!literal){
@@ -422,8 +426,6 @@ function findPriorLiterals(ctx: Rule.RuleContext, node: ESNode) {
 }
 
 export function getESObjectPath(node: WithParent<ESNode>): string | undefined {
-
-  if(!isGenericNodeWithParent(node)){ return; }
   if(!hasESNodeParentExtension(node)){ return; }
 
   if(
@@ -487,13 +489,24 @@ export function getESObjectPath(node: WithParent<ESNode>): string | undefined {
 
 }
 
-export interface ESSimpleStringLiteral extends Rule.NodeParentExtension, ESSimpleLiteral {
+export interface ESSimpleStringLiteral extends ESSimpleLiteral {
+  loc?: SourceLocation | null;
+  parent: ESNode;
+  range?: [number, number];
+  raw?: string;
   value: string;
 }
 
-export function isESObjectKey(node: ESBaseNode & Rule.NodeParentExtension) {
+export function isESObjectKey(node: ESBaseNode & ESNodeWithParent) {
+  if(node.parent.type !== "Property"){
+    return false;
+  }
+
+  if(!hasESNodeParentExtension(node.parent)){
+    return false;
+  }
+
   return (
-    node.parent.type === "Property" &&
     node.parent.parent.type === "ObjectExpression" &&
     node.parent.key === node
   );
@@ -509,6 +522,7 @@ export function isInsideObjectValue(node: WithParent<ESNode>) {
 
   if(
     node.parent.type === "Property" &&
+    hasESNodeParentExtension(node.parent) &&
     node.parent.parent.type === "ObjectExpression" &&
     node.parent.value === node
   ){
@@ -519,14 +533,22 @@ export function isInsideObjectValue(node: WithParent<ESNode>) {
 }
 
 
-function findMatchingParentNodes<Node>(node: Partial<GenericNodeWithParent>, matchesNode: (node: unknown) => node is Node): Node | undefined {
-  if(!isGenericNodeWithParent(node)){ return; }
+function findMatchingParentNodes<Node>(node: { parent?: ESNode | null; }, matchesNode: (node: unknown) => node is Node): Node | undefined {
+  const parent = node.parent;
 
-  if(matchesNode(node.parent)){
-    return node.parent as Node;
+  if(!parent){
+    return;
   }
 
-  return findMatchingParentNodes(node.parent, matchesNode);
+  if(matchesNode(parent)){
+    return parent;
+  }
+
+  if(!hasESNodeParentExtension(parent)){
+    return;
+  }
+
+  return findMatchingParentNodes(parent, matchesNode);
 }
 
 export function isESSimpleStringLiteral(node: ESBaseNode): node is ESSimpleStringLiteral {
@@ -638,9 +660,11 @@ function getESCalleeName(node: ESBaseNode, type: "name" | "path"): string | unde
   }
 }
 
-function getTaggedTemplateName(node: ESBaseNode & Partial<Rule.NodeParentExtension>, type: "name" | "path"): string | undefined {
+function getTaggedTemplateName(node: ESBaseNode & { parent?: ESNode | null; }, type: "name" | "path"): string | undefined {
   if(
-    node.type === "Identifier" && "name" in node && typeof node.name === "string" &&
+    node.type === "Identifier" &&
+    "name" in node &&
+    typeof node.name === "string" &&
     hasESNodeParentExtension(node) &&
     isTaggedTemplateExpression(node.parent)
   ){
@@ -658,7 +682,12 @@ function getTaggedTemplateName(node: ESBaseNode & Partial<Rule.NodeParentExtensi
 }
 
 function isNestedCurriedCall(node: ESCallExpression): boolean {
-  return hasESNodeParentExtension(node) && isESCallExpression(node.parent) && node.parent.callee === node;
+  if(!hasESNodeParentExtension(node)){
+    return false;
+  }
+
+  const parent = node.parent;
+  return isESCallExpression(parent) && parent.callee === node;
 }
 
 function getCurriedCallChain(node: ESCallExpression) {
@@ -757,12 +786,12 @@ function isESExportDefaultExpression(node: ESBaseNode): node is ESExpression {
   return true;
 }
 
-function isESVariableSymbol(node: ESBaseNode & Partial<Rule.NodeParentExtension>): node is ESIdentifier {
+function isESVariableSymbol(node: ESBaseNode & { parent?: ESNode | null; }): node is ESIdentifier {
   return node.type === "Identifier" && !!node.parent && isESVariableDeclarator(node.parent);
 }
 
-export function hasESNodeParentExtension(node: ESBaseNode): node is Rule.Node & Rule.NodeParentExtension {
-  return "parent" in node && !!node.parent;
+export function hasESNodeParentExtension(node: ESBaseNode): node is ESNodeWithParent {
+  return "parent" in node && isESNode(node.parent);
 }
 
 function getBracesByString(ctx: Rule.RuleContext, raw: string): BracesMeta {

@@ -951,7 +951,7 @@ describe(enforceConsistentLineWrapping.name, () => {
 
       expect(message).toContain("Inconsistent line endings detected");
       expect(message).toContain("Option `lineBreakStyle` may be misconfigured.");
-      expect(message).toContain(`${enforceConsistentLineWrapping.rule.meta.docs.url}#linebreakstyle`);
+      expect(message).toContain(`${enforceConsistentLineWrapping.rule.meta!.docs!.url}#linebreakstyle`);
     }
     {
       const linter = new ESLint({
@@ -977,7 +977,7 @@ describe(enforceConsistentLineWrapping.name, () => {
 
       expect(message).toContain("Inconsistent line endings detected");
       expect(message).toContain("Option `lineBreakStyle` may be misconfigured.");
-      expect(message).toContain(`${enforceConsistentLineWrapping.rule.meta.docs.url}#linebreakstyle`);
+      expect(message).toContain(`${enforceConsistentLineWrapping.rule.meta!.docs!.url}#linebreakstyle`);
     }
   });
 
@@ -1004,7 +1004,7 @@ describe(enforceConsistentLineWrapping.name, () => {
 
     expect(message).toContain("Inconsistent indentation detected");
     expect(message).toContain("Option `indent` may be misconfigured.");
-    expect(message).toContain(`${enforceConsistentLineWrapping.rule.meta.docs.url}#indent`);
+    expect(message).toContain(`${enforceConsistentLineWrapping.rule.meta!.docs!.url}#indent`);
   });
 
   it("should not warn for double spaces between classes", async () => {

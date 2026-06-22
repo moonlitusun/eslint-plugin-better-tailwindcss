@@ -8,7 +8,10 @@ import { withCache } from "../async-utils/cache.js";
 import type { AsyncContext } from "../utils/context.js";
 
 
-const fileSystem = new enhancedResolve.CachedInputFileSystem(fs, 30_000);
+const fileSystem = new enhancedResolve.CachedInputFileSystem(
+  fs as unknown as ConstructorParameters<typeof enhancedResolve.CachedInputFileSystem>[0],
+  30_000
+);
 
 const getESMResolver = (ctx: AsyncContext | undefined) => withCache("esm-resolver", ctx?.tsconfigPath, () => enhancedResolve.ResolverFactory.createResolver({
   conditionNames: ["node", "import"],

@@ -5,14 +5,14 @@ import config from "better-tailwindcss:configs/config.js";
 
 describe("configs", () => {
   const stylisticRules = Object.entries(config.rules).reduce<string[]>((acc, [name, rule]) => {
-    if(rule.meta.docs.recommended && rule.meta.type === "layout"){
+    if(rule.meta!.docs!.recommended && rule.meta!.type === "layout"){
       acc.push(`${config.meta.name}/${name}`);
     }
     return acc;
   }, []);
 
   const correctnessRules = Object.entries(config.rules).reduce<string[]>((acc, [name, rule]) => {
-    if(rule.meta.docs.recommended && rule.meta.type === "problem"){
+    if(rule.meta!.docs!.recommended && rule.meta!.type === "problem"){
       acc.push(`${config.meta.name}/${name}`);
     }
     return acc;

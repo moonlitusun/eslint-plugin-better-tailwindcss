@@ -92,7 +92,7 @@ function getLiteralsByVueMatchers(ctx: Rule.RuleContext, node: ESBaseNode, match
   return literals.filter(deduplicateLiterals);
 }
 
-function getLiteralsByVueESLiteralNode(ctx: Rule.RuleContext, node: ESBaseNode & Rule.NodeParentExtension): Literal[] {
+function getLiteralsByVueESLiteralNode(ctx: Rule.RuleContext, node: ESBaseNode & { parent: ESNode; }): Literal[] {
   const literals = getLiteralsByESLiteralNode(ctx, node);
 
   return literals.map(literal => {
@@ -132,7 +132,7 @@ function getStringLiteralByVueStringLiteral(ctx: Rule.RuleContext, node: AST.VLi
 
 }
 
-function getMultilineQuotes(node: ESBaseNode & Rule.NodeParentExtension | AST.VLiteral): MultilineMeta {
+function getMultilineQuotes(node: { parent: { type: string; }; }): MultilineMeta {
   const surroundingBraces = VUE_CONTAINER_TYPES_TO_INSERT_BRACES.includes(node.parent.type);
   const multilineQuotes: LiteralValueQuotes[] = VUE_CONTAINER_TYPES_TO_REPLACE_QUOTES.includes(node.parent.type)
     ? ["`"]

@@ -259,7 +259,7 @@ function getIsInterpolated(ctx: Rule.RuleContext, raw: string): boolean {
   return !!braces.closingBraces || !!braces.openingBraces;
 }
 
-function getMultilineQuotes(node: ESBaseNode & Rule.NodeParentExtension | SvelteLiteral | SvelteName): MultilineMeta {
+function getMultilineQuotes(node: { parent: { type: string; }; }): MultilineMeta {
   const surroundingBraces = SVELTE_CONTAINER_TYPES_TO_INSERT_BRACES.includes(node.parent.type);
   const multilineQuotes: LiteralValueQuotes[] = SVELTE_CONTAINER_TYPES_TO_REPLACE_QUOTES.includes(node.parent.type)
     ? ["'", "\"", "`"]

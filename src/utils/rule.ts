@@ -73,7 +73,9 @@ export function createRule<
   const Options extends CommonOptions & JsonSchema<OptionsSchema> = CommonOptions & JsonSchema<OptionsSchema>,
   const Category extends RuleCategory = RuleCategory,
   const Recommended extends boolean = boolean
->(options: CreateRuleOptions<Name, Messages, OptionsSchema, Options, Category, Recommended>) {
+>(
+  options: CreateRuleOptions<Name, Messages, OptionsSchema, Options, Category, Recommended>
+): ESLintRule<Name, Messages, Options, Category, Recommended> {
 
   const { autofix, category, description, docs, initialize, lintLiterals, messages, name, recommended, schema } = options;
 
