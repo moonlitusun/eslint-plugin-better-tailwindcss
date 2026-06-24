@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import { createRequire } from "node:module";
+import { resolve } from "node:path";
 
 import enhancedResolve from "enhanced-resolve";
 import { TsconfigPathsPlugin } from "tsconfig-paths-webpack-plugin";
@@ -79,5 +81,15 @@ export function resolveCss(ctxOrPath: AsyncContext | string | undefined, pathOrC
 export function resolveJson(path: string, cwd: string): string | undefined {
   try {
     return jsonResolver.resolveSync({}, cwd, path) || undefined;
-  } catch {}
+  } catch {
+    try {
+      const require = createRequire(resolve(cwd, "package.json"));
+      return require.resolve(path);
+    } catch {
+      try {
+        const require = createRequire(import.meta.url);
+        return require.resolve(path);
+      } catch {}
+    }
+  }
 }
