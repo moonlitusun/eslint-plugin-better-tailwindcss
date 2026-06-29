@@ -18,7 +18,11 @@ export interface AsyncContext {
 }
 
 export function async(ctx: Context): AsyncContext {
-  const { path: resolvedTailwindPath, warnings: tailwindConfigWarnings } = getTailwindConfigPath({ configPath: ctx.options.entryPoint ?? ctx.options.tailwindConfig, cwd: ctx.cwd, version: ctx.version });
+  const configPath = ctx.version.major >= 4
+    ? ctx.options.entryPoint ?? ctx.options.tailwindConfig
+    : ctx.options.tailwindConfig;
+
+  const { path: resolvedTailwindPath, warnings: tailwindConfigWarnings } = getTailwindConfigPath({ configPath, cwd: ctx.cwd, version: ctx.version });
   const { path: resolvedTSConfigPath, warnings: tsconfigWarnings } = getTSConfigPath({ configPath: ctx.options.tsconfig, cwd: ctx.cwd });
 
   return {

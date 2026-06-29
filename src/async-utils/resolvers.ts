@@ -60,7 +60,21 @@ export function resolveJs(ctxOrPath: AsyncContext | string | undefined, pathOrCw
   try {
     return getESMResolver(ctx).resolveSync({}, cwd, path) || path;
   } catch {
-    return getCJSResolver(ctx).resolveSync({}, cwd, path) || path;
+    try {
+      return getCJSResolver(ctx).resolveSync({}, cwd, path) || path;
+    } catch {
+      try {
+        const require = createRequire(resolve(cwd, "package.json"));
+        return require.resolve(path);
+      } catch {
+        try {
+          const require = createRequire(import.meta.url);
+          return require.resolve(path);
+        } catch {
+          return path;
+        }
+      }
+    }
   }
 }
 
@@ -74,7 +88,17 @@ export function resolveCss(ctxOrPath: AsyncContext | string | undefined, pathOrC
   try {
     return getCSSResolver(ctx).resolveSync({}, cwd, path) || path;
   } catch {
-    return path;
+    try {
+      const require = createRequire(resolve(cwd, "package.json"));
+      return require.resolve(path);
+    } catch {
+      try {
+        const require = createRequire(import.meta.url);
+        return require.resolve(path);
+      } catch {
+        return path;
+      }
+    }
   }
 }
 

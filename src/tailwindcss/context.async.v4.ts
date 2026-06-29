@@ -21,7 +21,8 @@ export const createTailwindContext = async (ctx: AsyncContext) => withCache("tai
   const tailwindPath = resolveJs(ctx, "tailwindcss", importBasePath);
 
   // eslint-disable-next-line eslint-plugin-typescript/naming-convention
-  const { __unstable__loadDesignSystem } = await import(normalize(tailwindPath));
+  const tailwindModule = await import(normalize(tailwindPath));
+  const __unstable__loadDesignSystem = tailwindModule.__unstable__loadDesignSystem ?? tailwindModule.default?.__unstable__loadDesignSystem;
 
   const css = await readFile(ctx.tailwindConfigPath, "utf-8");
 
